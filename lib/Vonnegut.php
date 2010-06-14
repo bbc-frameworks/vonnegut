@@ -9,6 +9,12 @@
 class Vonnegut
 {
     
+    
+    const LOG_LEVEL_CRITICAL = 1;
+    const LOG_LEVEL_WARN = 6;
+    const LOG_LEVEL_DEBUG = 12;
+    public $log_level = self::LOG_LEVEL_WARN;
+    
     /**
      * Array of acceptable file extensions.
      *
@@ -22,6 +28,7 @@ class Vonnegut
      * @var string
      */
     protected $_directories = array();
+    
     
     /**
      * Constructor function, if a directory path is 
@@ -40,10 +47,15 @@ class Vonnegut
      * Adds a directory to the list to be iterated.
      *
      * @param string $directory 
-     * @return void
+     * @return boolean
      */
     public function addDirectory($directory) {
+        if ( !is_dir($directory) ) {
+            $this->log("Invalid directory {$directory}!", Vonnegut::LOG_LEVEL_WARN);
+            return false;
+        }
         array_push($this->_directories, $directory);
+        return true;
     }
     
     /**
@@ -52,9 +64,11 @@ class Vonnegut
      * @return void
      */
     public function run() {
+        $list = array();
         foreach ( $this->_directories as $dir ) {
-            $this->_recurseTree(new recursiveDirectoryIterator($dir));
+            $list += $this->reflectTree(new RecursiveDirectoryIterator($dir));
         }
+        return $list;
     }
     
     /**
@@ -63,11 +77,11 @@ class Vonnegut
      * @param RecursiveDirectoryIterator $iterator
      * @return void
      */
-    protected function _recurseTree($iterator) {
+    public function reflectTree($iterator, &$tree = array()) {
         while ($iterator->valid()) {
             if ($iterator->isDir() && !$iterator->isDot()) {
                 if ($iterator->hasChildren()) {
-                    $this->_recurseTree($iterator->getChildren());
+                    $this->reflectTree($iterator->getChildren(), $tree);
                 }
             }
             else if ($iterator->isFile()) {
@@ -77,11 +91,12 @@ class Vonnegut
                     isset($pathinfo['extension']) &&
                     in_array(strtolower($pathinfo['extension']), $this->types)
                 ) {
-                    $this->reflectFile($path);
+                    $tree[$path] = $this->reflectFile($path);
                 }
             }
             $iterator->next();
         }
+        return $tree;
     }
     
     /**
@@ -92,6 +107,8 @@ class Vonnegut
      * @return object $doc the serialized documentation object.
      */
     public function reflectFile($path) {
+        $this->log("Reflecting file $path");
+        require_once($path);
         $filename = (strpos($path,"/")!==false) ? preg_replace("|.*/(.+)$|",$path,"$1") : $path;
         $doc = new StdClass();
         $doc->path = $path;
@@ -124,6 +141,7 @@ class Vonnegut
         $serial = new StdClass();
         $serial->name = $reflection->name;
         if ( $type == "class" ) {
+            $this->log(" class ".$reflection->name);
             $properties = $reflection->getProperties();
             $serial->properties = array();
             foreach ( $properties as $property ) {
@@ -136,6 +154,7 @@ class Vonnegut
                 $serial->properties[] = $serialProp;
             }
         } elseif ( $type == "method" ) {
+            $this->log("  method ".$reflection->name);
             if ( $reflection->isPrivate() ) $serial->access = "private";
             if ( $reflection->isProtected() ) $serial->access = "protected";
             if ( $reflection->isPublic() ) $serial->access = "public";
@@ -171,6 +190,17 @@ class Vonnegut
         return $serial;
     }
     
+    
+    
+    /**
+     * Print a log message;
+     */
+    public function log($str,$level=null) {
+        if ( $level == null ) $level = self::LOG_LEVEL_DEBUG;
+        if ( $level <= $this->log_level ) {
+            print $str;
+        }
+    }
     
     
     
