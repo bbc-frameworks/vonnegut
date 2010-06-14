@@ -9,10 +9,15 @@
 class Vonnegut
 {
     
-    
     const LOG_LEVEL_CRITICAL = 1;
     const LOG_LEVEL_WARN = 6;
     const LOG_LEVEL_DEBUG = 12;
+    
+    /**
+     * Log level at which to pass calls to Vonnegut::log().
+     *
+     * @var string
+     */
     public $log_level = self::LOG_LEVEL_WARN;
     
     /**
@@ -116,12 +121,12 @@ class Vonnegut
         $file_reflector = new Zend_Reflection_File($path);
         $classes = $file_reflector->getClasses();
         foreach ( $classes as $class ) {
-            $classOutput = $this->_serializeDocBlock($class,"class");
+            $classOutput = $this->serializeDocBlockClass($class);
             $classOutput->methods = array();
             $methods = $class->getMethods();
             foreach ( $methods as $method ) {
                 if ( $method->getDeclaringClass()->name !== $class->name ) continue;
-                $methodOutput = $this->_serializeDocBlock($method,"method");
+                $methodOutput = $this->serializeDocBlockMethod($method);
                 array_push($classOutput->methods, $methodOutput);
             }
             $doc->classes[] = $classOutput;
@@ -130,17 +135,15 @@ class Vonnegut
     }
     
     /**
-     * undocumented function
+     * Serializes a Class docblock.
      *
-     * @param string $reflection 
-     * @param string $type 
+     * @param ReflectionClass $reflection 
      * @return void
      * @author pete otaqui
      */
-    protected function _serializeDocBlock($reflection,$type) {
+    public function serializeDocBlockClass($reflection) {
         $serial = new StdClass();
         $serial->name = $reflection->name;
-        if ( $type == "class" ) {
             $this->log(" class ".$reflection->name);
             $properties = $reflection->getProperties();
             $serial->properties = array();
@@ -153,39 +156,54 @@ class Vonnegut
                 }
                 $serial->properties[] = $serialProp;
             }
-        } elseif ( $type == "method" ) {
-            $this->log("  method ".$reflection->name);
-            if ( $reflection->isPrivate() ) $serial->access = "private";
-            if ( $reflection->isProtected() ) $serial->access = "protected";
-            if ( $reflection->isPublic() ) $serial->access = "public";
-            try {
-                $serial->body = $reflection->getContents(true);
-            } catch ( Zend_Reflection_Exception $e ) {
-                $serial->body = $reflection->getContents(false);
-            }
-        }
         try {
             $db = $reflection->getDocBlock();
             $serial->shortDescription = $db->getShortDescription();
             $serial->longDescription = $db->getLongDescription();
-            if ( $type == "method" ) {
-                $serial->tags = array();
-                $tags = $db->getTags();
-                foreach ( $tags as $tag ) {
-                    $tagSerial = new StdClass();
-                    $tagSerial->name = $tag->getName();
-                    $tagSerial->description = $tag->getDescription();
-                    if ( is_a($tag, "Zend_Reflection_Docblock_Tag_Return") ) {
-                        $tagSerial->type = $tag->getType();
-                    } elseif ( is_a($tag, "Zend_Reflection_Docblock_Tag_Param") ) {
-                        $tagSerial->type = $tag->getType();
-                        $tagSerial->variableName = $tag->getVariableName();
-                    }
-                    $serial->tags[] = $tagSerial;
-                }
-            }
         } catch ( Zend_Reflection_Exception $e ) {
             
+        }
+        return $serial;
+    }
+    
+    /**
+     * Serializes a Method docblock.
+     *
+     * @param ReflectionMethod $reflection 
+     * @return object
+     * @author pete otaqui
+     */
+    public function serializeDocBlockMethod($reflection) {
+        $serial = new StdClass();
+        $serial->name = $reflection->name;
+        $this->log("  method ".$reflection->name);
+        if ( $reflection->isPrivate() ) $serial->access = "private";
+        if ( $reflection->isProtected() ) $serial->access = "protected";
+        if ( $reflection->isPublic() ) $serial->access = "public";
+        try {
+            $db = $reflection->getDocBlock();
+            $serial->shortDescription = $db->getShortDescription();
+            $serial->longDescription = $db->getLongDescription();
+            $serial->body = $reflection->getContents(true);
+        } catch ( Zend_Reflection_Exception $e ) {
+            $serial->body = $reflection->getContents(false);
+            $db = false;
+        }
+        if ( $db ) {
+            $serial->tags = array();
+            $tags = $db->getTags();
+            foreach ( $tags as $tag ) {
+                $tagSerial = new StdClass();
+                $tagSerial->name = $tag->getName();
+                $tagSerial->description = $tag->getDescription();
+                if ( is_a($tag, "Zend_Reflection_Docblock_Tag_Return") ) {
+                    $tagSerial->type = $tag->getType();
+                } elseif ( is_a($tag, "Zend_Reflection_Docblock_Tag_Param") ) {
+                    $tagSerial->type = $tag->getType();
+                    $tagSerial->variableName = $tag->getVariableName();
+                }
+                $serial->tags[] = $tagSerial;
+            }
         }
         return $serial;
     }

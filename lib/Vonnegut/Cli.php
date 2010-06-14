@@ -80,10 +80,20 @@ class Vonnegut_Cli extends Vonnegut
      * @return void
      */
     protected function _outputTreeItem($index, $item) {
+        //$this->log("$index");
+        //print_r($item);
         // May need Vonnegut_Output_Json and Vonnegut_Output_Otherformat
         // classes in the future.
         if ( $this->_format == 'json' ) {
-            
+            $filename = str_replace(DIRECTORY_SEPARATOR, '_', $index);
+            $filepath = $this->_outputDirectory . $filename . '.json';
+            $this->log("Writing $filepath");
+            $file = fopen($filepath,'w');
+            $json = Zend_Json::encode($item);
+            $rote = fwrite($file, $json);
+            if ( $rote === false ) {
+                $this->log("Could not write $filename", Vonnegut::LOG_LEVEL_WARN);
+            }
         }
     }
     
