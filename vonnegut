@@ -1,0 +1,17 @@
+#!/usr/bin/php
+<?php
+try {
+    require_once('Zend/Loader/Autoloader.php');
+} catch ( Exception $e ) {
+    print("You must have the Zend Framework in your PHP include_path.\n");
+    print("Current include_path:\n");
+    print( ini_get('include_path') );
+    die();
+}
+
+$autoloader = Zend_Loader_Autoloader::getInstance();
+
+require_once(dirname(__FILE__) . '/lib/Vonnegut.php');
+require_once(dirname(__FILE__) . '/lib/Vonnegut/Cli.php');
+
+$cli = new Vonnegut_Cli();
