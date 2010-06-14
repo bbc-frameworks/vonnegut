@@ -237,6 +237,7 @@ class Vonnegut_Cli
         // May need Vonnegut_Output_Json and Vonnegut_Output_Otherformat classes
         // in the future.
         if ( $this->_format == 'json' ) {
+            $json = Zend_Json::encode($reflection);
             if ( $this->_outputPath ) {
                 if ( $this->_singleFileMode ) {
                     $filepath = $this->_outputPath;
@@ -246,11 +247,12 @@ class Vonnegut_Cli
                 }
                 $this->log("Writing $filepath");
                 $file = fopen($filepath,'w');
-                $json = Zend_Json::encode($reflection);
                 $rote = fwrite($file, $json);
                 if ( $rote === false ) {
                     $this->log("Could not write $filename", Vonnegut_Cli::LOG_LEVEL_WARN);
                 }
+            } else {
+                $this->log($json, Vonnegut_Cli::LOG_LEVEL_CRITICAL);
             }
         }
     }
@@ -284,7 +286,8 @@ Usage : {$filename} [options] /tree/of/php/files/
  -h           Print help (this message) and exit.
  -o <path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
- -t           "Transaction" - try to parse all files before outputting.
+ -t           "Transaction", parse all files before outputting. This
+              will be required for @see and other post-processing.
  -v           Verbose console output.
  -y           Respond 'yes' to input queries.
 
