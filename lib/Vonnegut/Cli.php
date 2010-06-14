@@ -155,6 +155,11 @@ class Vonnegut_Cli
             $this->_recurseDirectory(new RecursiveDirectoryIterator($directory));
         }
     }
+    /**
+     * Recursive directory function.
+     *
+     * @param RecursiveDirectoryIterator $iterator 
+     */
     protected function _recurseDirectory($iterator) {
         while ($iterator->valid()) {
             if ($iterator->isDir() && !$iterator->isDot()) {
@@ -176,7 +181,7 @@ class Vonnegut_Cli
      * Adds a file to the list to be iterated.
      *
      * @param string $file 
-     * @return boolean
+     * @return boolean True if the file exists and was PHP, false otherwise.
      */
     public function addFile($file) {
         if ( !is_file($file) || !$this->_isPhpFile($file) ) {
@@ -192,7 +197,7 @@ class Vonnegut_Cli
      * use $this->_files;
      * 
      * @param array $files the array of files to relfect (optional)
-     * @return array $reflections
+     * @return array $reflections an array of serialized reflections
      */
     public function reflectFiles($files = null) {
         if ( $files == null ) $files = $this->_files;
@@ -274,17 +279,19 @@ class Vonnegut_Cli
     
     /**
      * Prints usage instructions.
+     * 
+     * @param string $executable the name of the executable file.
      */
-    public function usage($filename) {
+    public function usage($executable) {
         $usage = <<<USAGE
 Vonnegut PHP docblock parser command line interface
-Usage : {$filename} [options] /tree/of/php/files/
-        {$filename} [options] /single/php/file.php
-        {$filename} [options] /one/php/file/per/line.txt
+Usage : {$executable} [options] /tree/of/php/files/
+        {$executable} [options] /single/php/file.php
+        {$executable} [options] /one/php/file/per/line.txt
 
- -f <format>  Output <format>, currently only 'json' is supported.
+ -f=<format>  Output <format>, currently only 'json' is supported.
  -h           Print help (this message) and exit.
- -o <path>    Write output to <path>.  Should be a directory if
+ -o=<path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
  -t           "Transaction", parse all files before outputting. This
               will be required for @see and other post-processing.
@@ -297,6 +304,10 @@ USAGE;
 
     /**
      * Print a line to the console.
+     * 
+     * @var string $str messaage to print
+     * @var integer $level message level to print
+     * @todo Use STDERR for error messages!
      */
     public function log($str, $level = null) {
         $str .= "\n";
@@ -309,9 +320,13 @@ USAGE;
     /**
      * Exits the application with an optional 
      * status code, message and message log level
-     *
+     * 
+     * @param integer $code exit status code (0 = ok, 1 or greater=error)
+     * @param string $message message to print.  Will print regardless 
+     * of verbosity if $code>0 and logLevel not supplied.
+     * @param integer $logLevel logLevel for this message
      * @return void
-     * @author pete otaqui
+     * @todo Use STDERR for error messages!
      **/
     protected function _exit( $code=0, $message=null, $logLevel=null )
     {
