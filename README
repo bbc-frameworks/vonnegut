@@ -1,0 +1,12 @@
+    Vonnegut PHP docblock parser command line interface
+    Usage : ./vonnegut [options] /tree/of/php/files/
+            ./vonnegut [options] /single/php/file.php
+            ./vonnegut [options] /one/php/file/per/line.txt
+
+     -f <format>  Output <format>, currently only 'json' is supported.
+     -h           Print help (this message) and exit.
+     -o <path>    Write output to <path>.  Should be a directory if
+                  reflecting multiple files.  Default is STDOUT.
+     -t           "Transaction" - try to parse all files before outputting.
+     -v           Verbose console output.
+     -y           Respond 'yes' to input queries.
