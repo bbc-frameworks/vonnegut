@@ -25,15 +25,7 @@ class Vonnegut
         $file_reflector = new Zend_Reflection_File($path);
         $classes = $file_reflector->getClasses();
         foreach ( $classes as $class ) {
-            $classOutput = $this->reflectClass($class);
-            $classOutput->methods = array();
-            $methods = $class->getMethods();
-            foreach ( $methods as $method ) {
-                if ( $method->getDeclaringClass()->name !== $class->name ) continue;
-                $methodOutput = $this->reflectMethod($method);
-                array_push($classOutput->methods, $methodOutput);
-            }
-            $serial->classes[] = $classOutput;
+            $serial->classes[] = $this->reflectClass($class);
         }
         return $serial;
     }
@@ -48,17 +40,23 @@ class Vonnegut
     public function reflectClass($reflection) {
         $serial = new StdClass();
         $serial->name = $reflection->name;
-            $properties = $reflection->getProperties();
-            $serial->properties = array();
-            foreach ( $properties as $property ) {
-                $serialProp = new StdClass();
-                $serialProp->name = $property->name;
-                if ( $dbProp = $property->getDocComment() ) {
-                    $serialProp->shortDescription = $dbProp->getShortDescription();
-                    $serialProp->longDescription = $dbProp->getLongDescription();
-                }
-                $serial->properties[] = $serialProp;
+        $properties = $reflection->getProperties();
+        $serial->properties = array();
+        foreach ( $properties as $property ) {
+            $serialProp = new StdClass();
+            $serialProp->name = $property->name;
+            if ( $dbProp = $property->getDocComment() ) {
+                $serialProp->shortDescription = $dbProp->getShortDescription();
+                $serialProp->longDescription = $dbProp->getLongDescription();
             }
+            $serial->properties[] = $serialProp;
+        }
+        $serial->methods = array();
+        $methods = $reflection->getMethods();
+        foreach ( $methods as $method ) {
+            if ( $method->getDeclaringClass()->name !== $reflection->name ) continue;
+            $serial->methods[] = $this->reflectMethod($method);
+        }
         try {
             $db = $reflection->getDocBlock();
             $serial->shortDescription = $db->getShortDescription();
@@ -91,8 +89,8 @@ class Vonnegut
             $serial->body = $reflection->getContents(false);
             $db = false;
         }
+        $serial->tags = array();
         if ( $db ) {
-            $serial->tags = array();
             $tags = $db->getTags();
             foreach ( $tags as $tag ) {
                 $tagSerial = new StdClass();
