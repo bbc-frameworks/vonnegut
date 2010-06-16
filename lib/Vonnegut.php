@@ -9,6 +9,7 @@
 class Vonnegut
 {
     
+    
     /**
      * Reflects on a given file, parsing out classes and methods
      * for serialization.
@@ -28,6 +29,20 @@ class Vonnegut
             $serial->classes[] = $this->reflectClass($class);
         }
         return $serial;
+    }
+    
+    /**
+     * Reflects on a php string (useful for reflecting 'files' not on
+     * the local filesystem).
+     *
+     * @param string $phpString 
+     * @return object
+     * @author pete otaqui
+     */
+    public function reflectString($phpString) {
+        $path = tempnam(sys_get_temp_dir(), uniqid('__vonnegut__').'.php');
+        file_put_contents($path, $phpString);
+        return $this->reflectFile($path);
     }
     
     /**

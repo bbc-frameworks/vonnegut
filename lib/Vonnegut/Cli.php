@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * Command Line Interface class for Vonnegut.
  * 
@@ -6,6 +6,12 @@
  *
  * @package Vonnegut
  * @author pete otaqui
+ * @todo Add file exclusions for tree by regex / filename
+ * @todo Work out what's breaking this when run on Zend_Test
+ * @todo Maybe implement RH's idea for a Vonnegut_PathResolver
+ * @todo Add a prefix to strip off filename and serialized 'path' value
+ * @fixme Zend_* methods don't seem to return complete source?
+ * @todo Write some tests!
  **/
 class Vonnegut_Cli
 {
@@ -101,7 +107,7 @@ class Vonnegut_Cli
             $this->usage($argv[0]);
             $this->_exit();
         } else {
-            $this->_ask = ( $args['y'] ) ? false : true;
+            $this->_ask = ( isset($args['y']) ) ? false : true;
             if ( isset($args['quiet']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_CRITICAL;
             if ( isset($args['v']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_DEBUG;
             if ( isset($args['f']) ) {
@@ -244,7 +250,7 @@ class Vonnegut_Cli
         if ( $this->_format == 'json' ) {
             $json = Zend_Json::encode($reflection);
             if ( $this->_outputPath ) {
-                if ( $this->_singleFileMode ) {
+                if ( $this->_singleFile ) {
                     $filepath = $this->_outputPath;
                 } else {
                     $filename = str_replace(DIRECTORY_SEPARATOR, '_', $infile);
