@@ -1,32 +1,27 @@
 <?php
 
-
-try {
-    require_once('BBC/Autoload.php');
-    require_once('Zend/Loader/Autoloader.php');
-} catch ( Exception $e ) {
-    print("You must have the Zend Framework in your PHP include_path.\n");
-    print("Current include_path:\n");
-    print( ini_get('include_path') );
-    die("\n");
-}
-$autoloader = Zend_Loader_Autoloader::getInstance(); 
-
-
-require_once(dirname(dirname(__FILE__)).'/lib/Vonnegut.php');
-
+require_once('VonnegutTestCase.php');
 /**
  * Test the basic Vonnegut class
  *
  * @package VonnegutTests
  * @author pete otaqui
  */
-class VonnegutTest extends PHPUnit_Framework_Testcase
+class VonnegutTest extends VonnegutTestCase
 {
     
     public function testReflectFile() {
         $this->markTestIncomplete('This test is yet to be implemented');
     }
+    
+    public function testReflectClass() {
+        
+    }
+    
+    public function testReflectMethod() {
+        
+    }
+    
     
     public function testReflectString() {
         $phpString = <<<PHPSTRING
@@ -93,19 +88,13 @@ class UndocumentedClass
 PHPSTRING;
         $vonnegut = new Vonnegut();
         $serial = $vonnegut->reflectString($phpString);
-        $this->assertObjectHasAttribute('path', $serial, 'Vonnegut String (File) Serialization does not contain a Path');
-        $this->assertObjectHasAttribute('classes', $serial, 'Vonnegut String (File) Serialization does not contain Classes');
-        $this->assertEquals(3, count($serial->classes), 'Vonnegut String (File) Serialization does not contan 3 Classes');
-        $this->assertEquals(2, count($serial->classes[0]->methods), 'Vonnegut String (File) Serialization Class does not contan 2 Methods');
+        $vType = "Vonnegut String Serialization";
+        $this->assertObjectHasAttribute('path', $serial,                "$vType does not contain a Path attribute");
+        $this->assertObjectHasAttribute('classes', $serial,             "$vType does not contain a Classes attribute");
+        $this->assertEquals(3, count($serial->classes),                 "$vType does not contain 3 Classes");
+        $this->assertObjectHasAttribute('methods', $serial->classes[0], "$vType Class does not contain a Methods attribute");
+        $this->assertEquals(2, count($serial->classes[0]->methods),     "$vType Class does not contain 2 Methods");
+        $this->assertEquals('Gets a whatsit.', $serial->classes[0]->methods[0]->shortDescription, "OneThing::whatsit method has the wrong short description");
         
     }
-    
-    public function testReflectClass() {
-        
-    }
-    
-    public function testReflectMethod() {
-        
-    }
-    
 }
