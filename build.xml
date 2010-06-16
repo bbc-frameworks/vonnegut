@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<project name="Vonnegut Tests" default="test">
+        <property name="reports.dir" value="reports" />
+        <property name="tests.dir" value="test" />
+        <includepath classpath="./lib" />
+        <includepath classpath="./test" />
+        <target name="test" depends="dir_setup">
+                <phpunit haltonerror="true" haltonfailure="true" printsummary="true">
+                        <batchtest>
+                                <fileset dir="${tests.dir}">
+                                        <include name="*Test.php" />
+                                </fileset>
+                        </batchtest>
+                        <formatter type="plain" usefile="false" />
+                        <formatter type="xml" usefile="true" todir="${reports.dir}" outfile="test-results.xml" />
+                </phpunit>
+                <phpunitreport format="noframes" todir="${reports.dir}/html" infile="${reports.dir}/test-results.xml" />
+        </target>
+        <target name="dir_setup">
+                <mkdir dir="${reports.dir}" />
+                <mkdir dir="${reports.dir}/html" />
+                <mkdir dir="${reports.dir}/coverage" />
+        </target>
+</project>
+
