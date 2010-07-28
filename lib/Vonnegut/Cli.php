@@ -135,7 +135,7 @@ class Vonnegut_Cli
                 if ( !is_file($args['o']) && !is_dir($args['o']) ) {
                     $this->_exit(1, 'Exiting - output path doesn\'t exist.');
                 }
-                $this->_outputPath = $args['o'];
+                $this->_outputPath = preg_replace('/[\\\\\\/]$/', '', $args['o']);
             }
             
             if ( isset($args['t']) ) {
@@ -254,7 +254,7 @@ class Vonnegut_Cli
                     $filepath = $this->_outputPath;
                 } else {
                     $filename = str_replace(DIRECTORY_SEPARATOR, '_', $infile);
-                    $filepath = $this->_outputPath . $filename . '.json';
+                    $filepath = $this->_outputPath . DIRECTORY_SEPARATOR . $filename . '.json';
                 }
                 $this->log("Writing $filepath");
                 $file = fopen($filepath,'w');
