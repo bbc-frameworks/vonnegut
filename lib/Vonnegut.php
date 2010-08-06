@@ -158,7 +158,8 @@ class Vonnegut
         foreach ( $constants as $name=>$value ) {
             $constantSerial = new StdClass();
             $constantSerial->name = $name;
-            $serial->constants[] = $constantSerial;
+            $constantSerial->value = $value;
+            $serial->constants[$name] = $constantSerial;
         }
         
         // tags

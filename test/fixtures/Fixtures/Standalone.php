@@ -21,6 +21,13 @@
  */
 class Fixtures_Standalone
 {
+    
+    /**
+     * FOO is a constant.
+     */
+    const FOO = 'bar';
+    
+    
     /**
      * Static property.
      * 
