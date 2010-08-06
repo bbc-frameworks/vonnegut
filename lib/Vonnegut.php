@@ -76,11 +76,13 @@ class Vonnegut
             }
             unset($classSerial->name);
         }
+        /*
         $functions  = $file_reflector->getFunctions();
         foreach ( $functions as $function ) {
             $functionSerial = $this->reflectMethod($function);
             $serial->functions[$function->name] = $functionSerial;
         }
+        */
         $serial->meta = $this->_getMeta();
         $serial->meta->path = $path;
         return $serial;
@@ -153,9 +155,9 @@ class Vonnegut
         // constants
         $constants = $reflection->getConstants();
         $serial->constants = count($constants) ? array() : new StdClass();
-        foreach ( $constants as $constant ) {
+        foreach ( $constants as $name=>$value ) {
             $constantSerial = new StdClass();
-            $constantSerial->name = $constant->getName();
+            $constantSerial->name = $name;
             $serial->constants[] = $constantSerial;
         }
         
@@ -208,9 +210,7 @@ class Vonnegut
             $db = $reflection->getDocBlock();
             $serial->shortDescription = $db->getShortDescription();
             $serial->longDescription = $db->getLongDescription();
-            $serial->body = $reflection->getContents(true);
         } catch ( Zend_Reflection_Exception $e ) {
-            $serial->body = $reflection->getContents(false);
             $db = false;
         }
         $serial->tags = array();
