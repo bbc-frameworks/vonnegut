@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <project name="Vonnegut Tests" default="test">
+        <property name="app.dir" value="./lib" />
         <property name="reports.dir" value="reports" />
         <property name="tests.dir" value="test" />
         <includepath classpath="./lib" />
@@ -16,6 +17,23 @@
                 </phpunit>
                 <phpunitreport format="noframes" todir="${reports.dir}/html" infile="${reports.dir}/test-results.xml" />
         </target>
+    	<target name="coverage" depends="dir_setup" >
+    		<coverage-setup database="${reports.dir}/database">
+    			<fileset dir="${app.dir}">
+    				<include name="**/*.php" />
+    			</fileset>
+    		</coverage-setup>
+    		<phpunit codecoverage="true">
+    			<batchtest>
+    				<fileset dir="${tests.dir}">
+    					<include name="**/*Test.php" />
+    				</fileset>
+    			</batchtest>
+    		</phpunit>
+    		<coverage-report outfile="${reports.dir}/coverage.xml">
+    			<report todir="${reports.dir}/coverage" />
+    		</coverage-report>
+    	</target>
         <target name="dir_setup">
                 <mkdir dir="${reports.dir}" />
                 <mkdir dir="${reports.dir}/html" />
