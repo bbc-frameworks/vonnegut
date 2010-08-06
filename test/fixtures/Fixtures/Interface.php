@@ -1,0 +1,6 @@
+<?
+
+interface Fixtures_Interface
+{
+    
+}
