@@ -10,8 +10,6 @@
  * @todo Work out what's breaking this when run on Zend_Test
  * @todo Maybe implement RH's idea for a Vonnegut_PathResolver
  * @todo Add a prefix to strip off filename and serialized 'path' value
- * @fixme Zend_* methods don't seem to return complete source?
- * @todo Write some tests!
  **/
 class Vonnegut_Cli
 {
@@ -51,7 +49,7 @@ class Vonnegut_Cli
     protected $_formats = array('json');
     
     /**
-     * Output format, @see $_formats
+     * Output format, @see self::_formats
      *
      * @var string
      */
@@ -60,7 +58,7 @@ class Vonnegut_Cli
     /**
      * Ask for confirmation, default is TRUE
      *
-     * @var boolean
+     * @var bool
      */
     protected $_ask = true;
     
@@ -74,7 +72,7 @@ class Vonnegut_Cli
     /**
      * Running in single file mode.
      * 
-     * @var $boolean
+     * @var $bool
      */
     protected $_singleFile = false;
     
@@ -82,7 +80,7 @@ class Vonnegut_Cli
      * Transact generation (try and read all files before 
      * writing any output)
      *
-     * @var boolean
+     * @var bool
      **/
     protected $_transact = false;
     
@@ -92,6 +90,13 @@ class Vonnegut_Cli
      * @var string
      **/
     protected $_outputPath;
+    
+    /**
+     * Pretty printing
+     * 
+     * @var bool
+     **/
+    protected $_pretty = false;
     
     
     /**
@@ -110,6 +115,7 @@ class Vonnegut_Cli
             $this->_ask = ( isset($args['y']) ) ? false : true;
             if ( isset($args['quiet']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_CRITICAL;
             if ( isset($args['v']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_DEBUG;
+            if ( isset($args['p']) ) $this->_pretty = true;
             if ( isset($args['f']) ) {
                 if ( !in_array($args['f'], $this->_formats) ) {
                     $this->_exit(1, "Invalid format '{$args['f']}' specified!");
@@ -151,9 +157,10 @@ class Vonnegut_Cli
      * Adds a directory to the list to be iterated.
      *
      * @param string $directory 
-     * @return boolean
+     * @return bool
      */
     public function addDirectory($directory) {
+        ini_set('include_path', ini_get('include_path').':'.realpath($directory));
         if ( !is_dir($directory) ) {
             $this->log("Invalid directory {$directory}!", Vonnegut_Cli::LOG_LEVEL_WARN);
             return false;
@@ -187,7 +194,7 @@ class Vonnegut_Cli
      * Adds a file to the list to be iterated.
      *
      * @param string $file 
-     * @return boolean True if the file exists and was PHP, false otherwise.
+     * @return bool True if the file exists and was PHP, false otherwise.
      */
     public function addFile($file) {
         if ( !is_file($file) || !$this->_isPhpFile($file) ) {
@@ -231,9 +238,18 @@ class Vonnegut_Cli
      * @return void
      */
     protected function _outputReflectionFiles($reflections) {
-        foreach ($reflections as $infile => $reflection) {
-            $this->_outputReflectionFile($infile, $reflection);
+        $topLevelMembers = array('classes', 'interfaces', 'functions', 'constants', 'variables', 'constants', 'namespaces');
+        $serial = new StdClass();
+        foreach  ($topLevelMembers as $member) {
+            $serial->{$member} = array();
         }
+        foreach ( $reflections as $reflection ) {
+            foreach  ($topLevelMembers as $member) {
+                if ( isset($reflection->{$member}) ) $serial->{$member} += $reflection->{$member};
+            }
+        }
+        //print_r($serial);
+        $this->_outputReflectionFile("vonnegut", $serial);
     }
     
     /**
@@ -258,7 +274,8 @@ class Vonnegut_Cli
                 }
                 $this->log("Writing $filepath");
                 $file = fopen($filepath,'w');
-                $rote = fwrite($file, $json);
+                $output = ($this->_pretty) ? Zend_Json::prettyPrint($json, array("indent"=>"\t")) : $json;
+                $rote = fwrite($file, $output);
                 if ( $rote === false ) {
                     $this->log("Could not write $filename", Vonnegut_Cli::LOG_LEVEL_WARN);
                 }
@@ -272,7 +289,7 @@ class Vonnegut_Cli
      * Checks for a PHP file by using the extension.
      *
      * @param string $path 
-     * @return boolean
+     * @return bool
      */
     protected function _isPhpFile($path) {
         $pathinfo = pathinfo($path);
@@ -299,6 +316,7 @@ Usage : {$executable} [options] /tree/of/php/files/
  -h           Print help (this message) and exit.
  -o=<path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
+ -p           Pretty printing of json output.
  -t           "Transaction", parse all files before outputting. This
               will be required for @see and other post-processing.
  -v           Verbose console output.
@@ -348,7 +366,7 @@ USAGE;
     /**
      * Command line option parsing function.
      * 
-     * @see http://pwfisher.com/nucleus/index.php?itemid=45
+     * @link http://pwfisher.com/nucleus/index.php?itemid=45
      */
     public function parseArgs($argv){
         array_shift($argv); $o = array();
