@@ -4,7 +4,7 @@
  * 
  * Currently designed for *nix platforms.
  *
- * @package Vonnegut
+ * @package vonnegut
  * @author pete otaqui
  * @todo Add file exclusions for tree by regex / filename
  * @todo Work out what's breaking this when run on Zend_Test
