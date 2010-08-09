@@ -10,6 +10,7 @@
  * @todo Work out what's breaking this when run on Zend_Test
  * @todo Maybe implement RH's idea for a Vonnegut_PathResolver
  * @todo Add a prefix to strip off filename and serialized 'path' value
+ * 
  **/
 class Vonnegut_Cli
 {
@@ -49,14 +50,15 @@ class Vonnegut_Cli
     protected $_formats = array('json');
     
     /**
-     * Output format, @see self::_formats
+     * Output format
+     * @see self::_formats
      *
      * @var string
      */
     protected $_format = "json";
     
     /**
-     * Ask for confirmation, default is TRUE
+     * Ask for confirmation default is TRUE
      *
      * @var bool
      */
@@ -100,7 +102,7 @@ class Vonnegut_Cli
     
     
     /**
-     * Constructor function, will attempt to parse
+     * Constructor function will attempt to parse
      * command line options & arguments and then run.
      *
      */
@@ -194,7 +196,7 @@ class Vonnegut_Cli
      * Adds a file to the list to be iterated.
      *
      * @param string $file 
-     * @return bool True if the file exists and was PHP, false otherwise.
+     * @return bool True if the file exists and was PHP false otherwise.
      */
     public function addFile($file) {
         if ( !is_file($file) || !$this->_isPhpFile($file) ) {
@@ -206,7 +208,7 @@ class Vonnegut_Cli
     }
     
     /**
-     * Reflects an array of files.  If no argument provided, will
+     * Reflects an array of files.  If no argument provided will
      * use $this->_files;
      * 
      * @param array $files the array of files to relfect (optional)
@@ -238,22 +240,34 @@ class Vonnegut_Cli
      * @return void
      */
     protected function _outputReflectionFiles($reflections) {
-        $topLevelMembers = array('classes', 'interfaces', 'functions', 'constants', 'variables', 'constants', 'namespaces');
+        $topLevelMembers = array('classes', 'interfaces', 'functions', 'variables', 'constants', 'namespaces');
         $serial = new StdClass();
-        foreach  ($topLevelMembers as $member) {
-            $serial->{$member} = array();
-        }
+        $serial->classes = array();
+        $serial->interfaces = new StdClass();
+        $serial->functions = array();
+        $serial->constants = array();
+        $serial->variables = array();
+        $serial->namespaces = new StdClass();
         foreach ( $reflections as $reflection ) {
             foreach  ($topLevelMembers as $member) {
-                if ( isset($reflection->{$member}) ) $serial->{$member} += $reflection->{$member};
+                if ( is_array($reflection->{$member}) ) {
+                    if ( isset($reflection->{$member}) ) $serial->{$member} += $reflection->{$member};
+                } elseif ( is_object($reflection->{$member}) ) {
+                    $arrRef = (array) $reflection->{$member};
+                    foreach  ($arrRef as $k=>$v) {
+                        $serial->{$member}->$k = $v;
+                    }
+                }
             }
         }
+        $namespace = new StdClass();
+        $namespace->namespace = $serial;
         //print_r($serial);
         $this->_outputReflectionFile("vonnegut", $serial);
     }
     
     /**
-     * Outputs the reflection - can be to the command line or a file,
+     * Outputs the reflection - can be to the command line or a file
      * or a directory.
      *
      * @param string $infile
@@ -274,7 +288,7 @@ class Vonnegut_Cli
                 }
                 $this->log("Writing $filepath");
                 $file = fopen($filepath,'w');
-                $output = ($this->_pretty) ? Zend_Json::prettyPrint($json, array("indent"=>"\t")) : $json;
+                $output = ($this->_pretty) ? Zend_Json::prettyPrint($json) : $json;
                 $rote = fwrite($file, $output);
                 if ( $rote === false ) {
                     $this->log("Could not write $filename", Vonnegut_Cli::LOG_LEVEL_WARN);
@@ -343,9 +357,9 @@ USAGE;
     
     /**
      * Exits the application with an optional 
-     * status code, message and message log level
+     * status code message and message log level
      * 
-     * @param integer $code exit status code (0 = ok, 1 or greater=error)
+     * @param integer $code exit status code (0=ok >1=error)
      * @param string $message message to print.  Will print regardless 
      * of verbosity if $code>0 and logLevel not supplied.
      * @param integer $logLevel logLevel for this message

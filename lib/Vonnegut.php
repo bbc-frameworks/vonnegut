@@ -30,7 +30,7 @@ class Vonnegut
     
     
     /**
-     * Reflects on a given file, parsing out classes and methods
+     * Reflects on a given file parsing out classes and methods
      * for serialization.
      *
      * @param string $path the path of a file to reflect.
@@ -46,9 +46,9 @@ class Vonnegut
         $serial = new StdClass();
         $serial->constants = array();
         $serial->variables = array();
-        $serial->namespaces = array();
+        $serial->namespaces = new StdClass();
         $serial->classes = array();
-        $serial->interfaces = array();
+        $serial->interfaces = new StdClass();
         $serial->functions = array();
         $file_reflector = new Zend_Reflection_File($path);
         $serial->tags = array();
@@ -74,7 +74,6 @@ class Vonnegut
             } else {
                 $serial->interfaces[$classSerial->name] = $classSerial;
             }
-            unset($classSerial->name);
         }
         /*
         $functions  = $file_reflector->getFunctions();
@@ -141,7 +140,6 @@ class Vonnegut
                 }
             }
             $serial->properties[$serialProp->name] = $serialProp;
-            unset($serialProp->name);
         }
         // methods
         $methods = $reflection->getMethods();
@@ -150,7 +148,6 @@ class Vonnegut
             if ( $method->getDeclaringClass()->name !== $reflection->name ) continue;
             $serialMethod = $this->reflectMethod($method);
             $serial->methods[$serialMethod->name] = $serialMethod;
-            unset($serialMethod->name);
         }
         // constants
         $constants = $reflection->getConstants();
@@ -199,6 +196,7 @@ class Vonnegut
     public function reflectMethod($reflection) {
         $serial = new StdClass();
         $serial->name = $reflection->name;
+        $serial->signatures = new StdClass();
         if ( get_class($reflection) == 'Zend_Reflection_Method' ) {            
             $serial->access = $this->_getAccess($reflection);
             $serial->abstract = $reflection->isAbstract();
@@ -278,10 +276,10 @@ class Vonnegut
     }
     
     /**
-     * gets the access status of a property or method (public, protected, private)
+     * gets the access status of a property or method (public protected private)
      *
      * @param ReflectionMethod $reflection 
-     * @return string one of "public", "private" or "protected"
+     * @return string one of "public" "private" or "protected"
      */
     protected function _getAccess($reflection) {
         if ( $reflection->isPrivate() ) return "private";
