@@ -41,7 +41,12 @@ class Vonnegut
         if ( $path[0]!=="/" && !preg_match('/^(?:[a-zA-Z]:\\|\/)/', $path)) {
             $path = '.' . DIRECTORY_SEPARATOR . $path;
         }
-        require_once($path);
+        
+        // don't require if the file has already been autoloaded.
+        if (! in_array($path, get_included_files())) {
+            require_once($path);
+        }
+        
         $filename = preg_replace("|^.*[\\\/]|", $path, '');
         $serial = new StdClass();
         $serial->constants = array();

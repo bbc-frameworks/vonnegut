@@ -1,18 +1,14 @@
 #!/usr/bin/php
 <?
-try {
-    require_once('BBC/Autoload.php');
-    require_once('Zend/Loader/Autoloader.php');
-} catch ( Exception $e ) {
-    print("You must have the Zend Framework in your PHP include_path.\n");
-    print("Current include_path:\n");
-    print( ini_get('include_path') );
-    die();
+// need another param to add to the include path
+//set_include_path($includePaths . ':' . get_include_path());
+
+function autoload ($classname) {
+    if (! class_exists($classname, false)) {
+        $path = str_replace('_', DIRECTORY_SEPARATOR, $classname);
+        require_once($path . '.php');
+    }
 }
-
-$autoloader = Zend_Loader_Autoloader::getInstance();
-
-
 
 require_once(dirname(__FILE__) . '/lib/Vonnegut.php');
 require_once(dirname(__FILE__) . '/lib/Vonnegut/Cli.php');
