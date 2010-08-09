@@ -47,7 +47,7 @@ class Vonnegut
         $serial->constants = array();
         $serial->variables = array();
         $serial->namespaces = new StdClass();
-        $serial->classes = array();
+        $serial->classes = new StdClass();
         $serial->interfaces = new StdClass();
         $serial->functions = array();
         $file_reflector = new Zend_Reflection_File($path);
@@ -70,9 +70,9 @@ class Vonnegut
             $isInterface = $classSerial->interface;
             unset($classSerial->interface);
             if ( $isInterface == false ) {
-                $serial->classes[$classSerial->name] = $classSerial;
+                $serial->classes->{$classSerial->name} = $classSerial;
             } else {
-                $serial->interfaces[$classSerial->name] = $classSerial;
+                $serial->interfaces->{$classSerial->name} = $classSerial;
             }
         }
         /*

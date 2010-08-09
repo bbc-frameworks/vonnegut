@@ -330,7 +330,6 @@ Usage : {$executable} [options] /tree/of/php/files/
  -h           Print help (this message) and exit.
  -o=<path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
- -p           Pretty printing of json output.
  -t           "Transaction", parse all files before outputting. This
               will be required for @see and other post-processing.
  -v           Verbose console output.

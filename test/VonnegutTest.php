@@ -163,8 +163,8 @@ class VonnegutTest extends VonnegutTestCase
         $vonnegut = new Vonnegut();
         require_once(realpath(dirname(__FILE__)) . "/fixtures/Fixtures/Interface.php");
         $file = $vonnegut->reflectFile(dirname(__FILE__) . "/fixtures/Fixtures/Interface.php");
-        $this->assertEquals( 1, count($file->interfaces), "File contains an interface");
-        $this->assertEquals( 0, count($file->classes), "File contains no classes");
+        $this->assertEquals( 1, count((array)$file->interfaces), "File contains an interface");
+        $this->assertEquals( 0, count((array)$file->classes), "File contains no classes");
     }
     
     public function testImplements() {
@@ -179,7 +179,7 @@ class VonnegutTest extends VonnegutTestCase
         $vonnegut = new Vonnegut();
         require_once(realpath(dirname(__FILE__)) . "/fixtures/Fixtures/Multiple.php");
         $file = $vonnegut->reflectFile(dirname(__FILE__) . "/fixtures/Fixtures/Multiple.php");
-        $this->assertEquals( 3, count($file->classes), "Contains 3 classes");
+        $this->assertEquals( 3, count((array)$file->classes), "Contains 3 classes");
     }
     
     public function testGlobals() {
