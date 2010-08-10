@@ -100,6 +100,13 @@ class Vonnegut_Cli
      **/
     protected $_pretty = false;
     
+    /**
+     * Additional include path
+     *
+     * @var string
+     */
+    protected $_includePath = "";
+    
     
     /**
      * Constructor function will attempt to parse
@@ -118,6 +125,7 @@ class Vonnegut_Cli
             $this->_ask = ( isset($args['y']) ) ? false : true;
             if ( isset($args['quiet']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_CRITICAL;
             if ( isset($args['v']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_DEBUG;
+            if ( isset($args['i']) ) $this->_include_path = $args['i'];
             if ( isset($args['p']) ) $this->_pretty = true;
             if ( isset($args['f']) ) {
                 if ( !in_array($args['f'], $this->_formats) ) {
@@ -149,6 +157,11 @@ class Vonnegut_Cli
             
             if ( isset($args['t']) ) {
                 $this->_transact = true;
+            }
+            
+            if ( isset($args['i']) ) {
+                set_include_path( get_include_path() . PATH_SEPARATOR . $args['i'] );
+                $this->log('Include path : ' . get_include_path());
             }
             
             $reflections = $this->reflectFiles();
@@ -329,6 +342,7 @@ Usage : {$executable} [options] /tree/of/php/files/
 
  -f=<format>  Output <format>, currently only 'json' is supported.
  -h           Print help (this message) and exit.
+ -i=<path>    Add to the include_path (e.g. -i=/path/one:/path/two)
  -o=<path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
  -t           "Transaction", parse all files before outputting. This
