@@ -160,7 +160,7 @@ class Vonnegut_Cli
             }
             
             if ( isset($args['i']) ) {
-                set_include_path( get_include_path() . PATH_SEPARATOR . $args['i'] );
+                set_include_path( $args['i'] . PATH_SEPARATOR . get_include_path() );
                 $this->log('Include path : ' . get_include_path());
             }
             
