@@ -176,7 +176,7 @@ class Vonnegut_Cli
      * @return bool
      */
     public function addDirectory($directory) {
-        ini_set('include_path', ini_get('include_path').':'.realpath($directory));
+        ini_set('include_path', realpath($directory) . PATH_SEPARATOR . get_include_path());
         if ( !is_dir($directory) ) {
             $this->log("Invalid directory {$directory}!", Vonnegut_Cli::LOG_LEVEL_WARN);
             return false;
