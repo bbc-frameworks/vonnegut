@@ -212,12 +212,20 @@ class Vonnegut
         // you can only try and access it, and catch thrown exception.
         try {
             $db = $reflection->getDocBlock();
-            $serial->shortDescription = $db->getShortDescription();
-            $serial->longDescription = $db->getLongDescription();
+            $serial->description = $this->_getDescription($db);
+            // $serial->shortDescription = $db->getShortDescription();
+            // $serial->longDescription = $db->getLongDescription();
         } catch ( Zend_Reflection_Exception $e ) {
             $db = false;
         }
         $serial->tags = array();
+        
+        $serial->signatures = array( (object) array(
+            'parameters' => array(),
+            'description' => array(),
+            'throws' => array(),
+            'returns' => array()
+        ));
         // reflect on parameters first - these can be overridden by tags
         foreach ( $reflection->getParameters() as $parameter ) {
             $paramSerial = new StdClass();
@@ -235,7 +243,7 @@ class Vonnegut
                 $paramSerial->defaultValue = $parameter->getDefaultValue();
             }
             $paramSerial->passedByReference = $parameter->isPassedByReference();
-            $serial->parameters[] = $paramSerial;
+            $serial->signatures[0]->parameters[] = $paramSerial;
         }
         if ( $db ) {
             $paramCount = 0;
@@ -247,18 +255,18 @@ class Vonnegut
                 // pull out "@return"
                 if ( is_a($tag, "Zend_Reflection_Docblock_Tag_Return") ) {
                     $tagSerial->type = $tag->getType();
-                    $serial->return = $tagSerial;
+                    $serial->signatures[0]->return = $tagSerial;
                 // pull out "@param" and override reflected info
                 } elseif ( is_a($tag, "Zend_Reflection_Docblock_Tag_Param") ) {
                     $tagSerial->type = $tag->getType();
                     $tagSerial->name = $tag->getVariableName();
-                    if ( isset($serial->parameters[$paramCount]) ) {
+                    if ( isset($serial->signatures[0]->parameters[$paramCount]) ) {
                         $tagArray = (array) $tagSerial;
                         foreach ( $tagArray as $k=>$v ) {
-                            $serial->parameters[$paramCount]->$k = $v;
+                            $serial->signatures[0]->parameters[$paramCount]->$k = $v;
                         }
                     } else {
-                        $serial->parameters[$paramCount] = $tagSerial;
+                        $serial->signatures[0]->parameters[$paramCount] = $tagSerial;
                     }
                     $paramCount++;
                 // put everything else into $serial->tags
