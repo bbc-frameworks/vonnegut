@@ -107,6 +107,7 @@ class Vonnegut_Cli
      *
      */
     public function __construct() {
+        spl_autoload_register("vonnegut_autoload");
         $this->_vonnegut = new Vonnegut();
         global $argc, $argv;
         $args = $this->parseArgs($argv);
@@ -242,7 +243,7 @@ class Vonnegut_Cli
     protected function _outputReflectionFiles($reflections) {
         $topLevelMembers = array('classes', 'interfaces', 'functions', 'variables', 'constants', 'namespaces');
         $serial = new StdClass();
-        $serial->classes = array();
+        $serial->classes = new StdClass();
         $serial->interfaces = new StdClass();
         $serial->functions = array();
         $serial->constants = array();
@@ -279,6 +280,7 @@ class Vonnegut_Cli
         // in the future.
         if ( $this->_format == 'json' ) {
             $json = Zend_Json::encode($reflection);
+            $output = ($this->_pretty) ? Zend_Json::prettyPrint($json) : $json;
             if ( $this->_outputPath ) {
                 if ( $this->_singleFile ) {
                     $filepath = $this->_outputPath;
@@ -288,13 +290,12 @@ class Vonnegut_Cli
                 }
                 $this->log("Writing $filepath");
                 $file = fopen($filepath,'w');
-                $output = ($this->_pretty) ? Zend_Json::prettyPrint($json) : $json;
                 $rote = fwrite($file, $output);
                 if ( $rote === false ) {
                     $this->log("Could not write $filename", Vonnegut_Cli::LOG_LEVEL_WARN);
                 }
             } else {
-                $this->log($json, Vonnegut_Cli::LOG_LEVEL_CRITICAL);
+                $this->log($output, Vonnegut_Cli::LOG_LEVEL_CRITICAL);
             }
         }
     }
@@ -374,7 +375,6 @@ USAGE;
         exit($code);
     }
     
-    
 
     /**
      * Command line option parsing function.
@@ -392,5 +392,13 @@ USAGE;
                 else { foreach (str_split(substr($a,1)) as $k){ if (!isset($o[$k])){ $o[$k] = true; } } } }
             else { $o[] = $a; } }
         return $o;
+    }
+}
+
+
+function vonnegut_autoload ($classname) {
+    if (! class_exists($classname, false)) {
+        $path = str_replace('_', DIRECTORY_SEPARATOR, $classname);
+        require_once($path . '.php');
     }
 }

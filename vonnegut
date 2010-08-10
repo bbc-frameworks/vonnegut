@@ -1,14 +1,5 @@
 #!/usr/bin/php
 <?
-// need another param to add to the include path
-//set_include_path($includePaths . ':' . get_include_path());
-
-function autoload ($classname) {
-    if (! class_exists($classname, false)) {
-        $path = str_replace('_', DIRECTORY_SEPARATOR, $classname);
-        require_once($path . '.php');
-    }
-}
 
 require_once(dirname(__FILE__) . '/lib/Vonnegut.php');
 require_once(dirname(__FILE__) . '/lib/Vonnegut/Cli.php');
