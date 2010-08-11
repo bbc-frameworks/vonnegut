@@ -166,8 +166,7 @@ class VonnegutTest extends VonnegutTestCase
         $vonnegut = new Vonnegut();
         require_once(realpath(dirname(__FILE__)) . "/fixtures/Fixtures/Interface.php");
         $file = $vonnegut->reflectFile(dirname(__FILE__) . "/fixtures/Fixtures/Interface.php");
-        $this->assertEquals( 1, count((array)$file->interfaces), "File contains an interface");
-        $this->assertEquals( 0, count((array)$file->classes), "File contains no classes");
+        $this->assertEquals( true, $file->classes->Fixtures_Interface->interface, "File contains an interface");
     }
     
     public function testImplements() {

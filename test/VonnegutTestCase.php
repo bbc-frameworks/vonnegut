@@ -3,6 +3,8 @@
 
 
 require_once(dirname(dirname(__FILE__)).'/lib/Vonnegut.php');
+require_once(dirname(dirname(__FILE__)).'/lib/Vonnegut/Class.php');
+require_once(dirname(dirname(__FILE__)).'/lib/Vonnegut/Namespace.php');
 
 /**
  * Test the basic Vonnegut class

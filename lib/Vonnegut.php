@@ -48,13 +48,7 @@ class Vonnegut
         }
         
         $filename = preg_replace("|^.*[\\\/]|", $path, '');
-        $serial = new StdClass();
-        $serial->constants = array();
-        $serial->variables = array();
-        $serial->namespaces = new StdClass();
-        $serial->classes = new StdClass();
-        $serial->interfaces = new StdClass();
-        $serial->functions = array();
+        $serial = new Vonnegut_Namespace();
         $file_reflector = new Zend_Reflection_File($path);
         $serial->tags = array();
         try {
@@ -72,13 +66,7 @@ class Vonnegut
         $classes = $file_reflector->getClasses();
         foreach ( $classes as $class ) {
             $classSerial = $this->reflectClass($class);
-            $isInterface = $classSerial->interface;
-            unset($classSerial->interface);
-            if ( $isInterface == false ) {
-                $serial->classes->{$classSerial->name} = $classSerial;
-            } else {
-                $serial->interfaces->{$classSerial->name} = $classSerial;
-            }
+            $serial->classes->{$classSerial->name} = $classSerial;
         }
         /*
         $functions  = $file_reflector->getFunctions();
@@ -89,8 +77,10 @@ class Vonnegut
         */
         $serial->meta = $this->_getMeta();
         $serial->meta->path = $path;
+        
         return $serial;
     }
+    
     
     /**
      * Reflects on a php string (useful for reflecting 'files' not on
@@ -114,7 +104,7 @@ class Vonnegut
      * @author pete otaqui
      */
     public function reflectClass($reflection) {
-        $serial = new StdClass();
+        $serial = new Vonnegut_Class();
         $serial->name = $reflection->name;
         // put parent class name into $serial->extends
         $parentClass = (array) $reflection->getParentClass();
@@ -277,6 +267,71 @@ class Vonnegut
         }
         return $serial;
     }
+    
+    
+    
+    /**
+     * Merges an array of reflections (i.e. from some files) into one.
+     *
+     * @param array $reflections 
+     * @param string $name The name to give the new serialization. 
+     * @return object $serial a single merged "reflection" serial
+     */
+    public static function mergeReflections($reflections, $name="Vonnegut") {
+        $topLevelMembers = array('classes', 'interfaces', 'functions', 'variables', 'constants', 'namespaces');
+        $serial = new Vonnegut_Namespace($name);
+        foreach ( $reflections as $reflection ) {
+            foreach  ($topLevelMembers as $member) {
+                if ( is_array($reflection->{$member}) ) {
+                    if ( isset($reflection->{$member}) ) $serial->{$member} += $reflection->{$member};
+                } elseif ( is_object($reflection->{$member}) ) {
+                    $arrRef = (array) $reflection->{$member};
+                    foreach  ($arrRef as $k=>$v) {
+                        $serial->{$member}->$k = $v;
+                    }
+                }
+            }
+        }
+        return $serial;
+    }
+    
+    /**
+     * detects "namespaces" in PHP classnames (by checking for an underscore)
+     *
+     * @param object $classSerial the serialised class object 
+     * @return bool $containsNamespaces
+     */
+    public static function hasNamespaces($classSerial) {
+        return (strpos($classSerial, "_") !== false);
+    }
+    
+    /**
+     * Converts classes to "namespaced" structure.
+     *
+     * @param object $serial a vonnegut serial
+     * @return $serial the converted object
+     */
+    public static function convertNamespaces($serial) {
+        foreach ( $serial->classes as $className => $classSerial ) {
+            if ( Vonnegut::hasNamespaces($className) ) {
+                $names = explode('_', $classSerial->name);
+                $littleName = $classSerial->name = array_pop($names);
+                $curContext = $serial;
+                foreach ( $names as $namespace ) {
+                    if ( !isset( $curContext->namespaces->$namespace ) ) {
+                        $curContext->namespaces->$namespace = new Vonnegut_Namespace();
+                        $curContext->namespaces->$namespace->name = $namespace;
+                    }
+                    $curContext = $curContext->namespaces->$namespace;
+                }
+                $curContext->classes->$littleName = clone $classSerial;
+                unset($serial->classes->$className);
+            }
+        }
+        return $serial;
+    }
+    
+    
     
     /**
      * gets compound description from shortDescription and longDescription

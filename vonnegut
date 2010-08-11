@@ -3,6 +3,8 @@
 
 require_once(dirname(__FILE__) . '/lib/Vonnegut.php');
 require_once(dirname(__FILE__) . '/lib/Vonnegut/Cli.php');
+require_once(dirname(__FILE__) . '/lib/Vonnegut/Namespace.php');
+require_once(dirname(__FILE__) . '/lib/Vonnegut/Class.php');
 
 
 $cli = new Vonnegut_Cli();

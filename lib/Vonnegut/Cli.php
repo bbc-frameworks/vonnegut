@@ -84,7 +84,7 @@ class Vonnegut_Cli
      *
      * @var bool
      **/
-    protected $_transact = false;
+    protected $_transact = true;
     
     /**
      * Directory or file in which to write output.
@@ -107,6 +107,13 @@ class Vonnegut_Cli
      */
     protected $_includePath = "";
     
+    /**
+     * The name to give merged serialisations
+     *
+     * @var string
+     */
+    protected $_name = "Vonnegut";
+    
     
     /**
      * Constructor function will attempt to parse
@@ -127,6 +134,7 @@ class Vonnegut_Cli
             if ( isset($args['v']) ) $this->log_level = Vonnegut_Cli::LOG_LEVEL_DEBUG;
             if ( isset($args['i']) ) $this->_include_path = $args['i'];
             if ( isset($args['p']) ) $this->_pretty = true;
+            if ( isset($args['n']) ) $this->_name = $args['n'];
             if ( isset($args['f']) ) {
                 if ( !in_array($args['f'], $this->_formats) ) {
                     $this->_exit(1, "Invalid format '{$args['f']}' specified!");
@@ -254,26 +262,12 @@ class Vonnegut_Cli
      * @return void
      */
     protected function _outputReflectionFiles($reflections) {
-        $topLevelMembers = array('classes', 'interfaces', 'functions', 'variables', 'constants', 'namespaces');
-        $serial = new StdClass();
-        $serial->classes = new StdClass();
-        $serial->interfaces = new StdClass();
-        $serial->functions = array();
-        $serial->constants = array();
-        $serial->variables = array();
-        $serial->namespaces = new StdClass();
-        foreach ( $reflections as $reflection ) {
-            foreach  ($topLevelMembers as $member) {
-                if ( is_array($reflection->{$member}) ) {
-                    if ( isset($reflection->{$member}) ) $serial->{$member} += $reflection->{$member};
-                } elseif ( is_object($reflection->{$member}) ) {
-                    $arrRef = (array) $reflection->{$member};
-                    foreach  ($arrRef as $k=>$v) {
-                        $serial->{$member}->$k = $v;
-                    }
-                }
-            }
-        }
+        
+        $name = $this->_name;
+        
+        $serial = Vonnegut::mergeReflections($reflections, $name);
+        $serial = Vonnegut::convertNamespaces($serial);
+        
         $namespace = new StdClass();
         $namespace->namespace = $serial;
         //print_r($serial);
@@ -343,10 +337,9 @@ Usage : {$executable} [options] /tree/of/php/files/
  -f=<format>  Output <format>, currently only 'json' is supported.
  -h           Print help (this message) and exit.
  -i=<path>    Add to the include_path (e.g. -i=/path/one:/path/two)
+ -n=<name>    The name to give the root object, default is "Vonnegut"
  -o=<path>    Write output to <path>.  Should be a directory if
               reflecting multiple files.  Default is STDOUT.
- -t           "Transaction", parse all files before outputting. This
-              will be required for @see and other post-processing.
  -v           Verbose console output.
  -y           Respond 'yes' to input queries.
 
